@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="bn" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MARUF Moderator Portal | Pro V3</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        darkBg: '#05080e',
+                        cardBg: '#0b1220',
+                    },
+                    backgroundImage: {
+                        'mod-gradient': 'linear-gradient(135deg, #38bdf8 0%, #0284c7 100%)',
+                    }
+                }
+            }
+        }
+    </script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Hind Siliguri', 'Inter', sans-serif; background-color: #05080e; color: #F1F5F9; }
+        .font-english { font-family: 'Inter', sans-serif; }
+        .font-mono-num { font-family: 'JetBrains Mono', monospace; }
+    </style>
+</head>
+<body class="min-h-screen bg-darkBg text-slate-100 flex flex-col justify-between">
+
+    <!-- Toast Box -->
+    <div id="toastBox" class="fixed bottom-6 right-6 z-50 max-w-sm w-[calc(100%-3rem)] transform translate-y-28 opacity-0 pointer-events-none transition-all duration-300">
+        <div class="bg-slate-900/95 backdrop-blur-md border border-sky-400/40 rounded-2xl p-4 shadow-2xl flex items-start gap-3">
+            <div class="w-9 h-9 rounded-xl bg-sky-400/20 text-sky-400 flex items-center justify-center shrink-0 mt-0.5">
+                <i class="fa-solid fa-circle-check text-lg"></i>
+            </div>
+            <div class="flex-1 text-left">
+                <h4 id="toastTitle" class="text-sm font-bold text-slate-100">সফল হয়েছে</h4>
+                <p id="toastMessage" class="text-xs text-slate-300 mt-1"></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Header -->
+    <header class="sticky top-0 z-40 bg-cardBg/90 backdrop-blur-md border-b border-slate-800">
+        <div class="max-w-6xl mx-auto px-4 py-3.5 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-mod-gradient p-[1.5px] flex items-center justify-center">
+                    <div class="w-full h-full bg-darkBg rounded-[10px] flex items-center justify-center font-english font-black text-lg text-sky-400">M</div>
+                </div>
+                <div>
+                    <h1 class="font-english text-base sm:text-lg font-black text-white">MODERATOR <span class="text-sky-400">PORTAL</span></h1>
+                    <p class="text-[11px] text-slate-400">কাস্টমার ইউজার কন্ট্রোল সেন্টার</p>
+                </div>
+            </div>
+            <button id="modLogoutBtn" onclick="logoutModerator()" class="hidden px-3.5 py-2 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-xs text-rose-400 font-bold border border-rose-500/30 transition flex items-center gap-1.5">
+                <i class="fa-solid fa-right-from-bracket"></i> <span>লগআউট</span>
+            </button>
+        </div>
+    </header>
+
+    <main class="max-w-6xl mx-auto w-full px-4 py-6 flex-grow">
+        <!-- LOGIN VIEW -->
+        <div id="modLoginView" class="max-w-md mx-auto my-8 bg-cardBg border border-slate-800 rounded-3xl p-7 shadow-2xl space-y-6">
+            <div class="text-center space-y-2">
+                <div class="w-14 h-14 mx-auto rounded-2xl bg-sky-500/10 border border-sky-500/30 text-sky-400 flex items-center justify-center text-2xl">
+                    <i class="fa-solid fa-user-shield"></i>
+                </div>
+                <h2 class="text-xl font-extrabold text-white font-english">মডারেটর লগইন</h2>
+                <p class="text-xs text-slate-400">আপনার ইউজারনেম এবং পাসওয়ার্ড দিয়ে প্রবেশ করুন</p>
+            </div>
+            <form onsubmit="handleModLogin(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-300 mb-1.5">ইউজারনেম</label>
+                    <input type="text" id="modUser" required placeholder="যেমন: mod1" class="w-full px-4 py-3 rounded-xl bg-slate-950 border border-slate-800 text-sm text-slate-100 focus:border-sky-400 focus:outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-300 mb-1.5">পাসওয়ার্ড</label>
+                    <input type="password" id="modPass" required placeholder="পাসওয়ার্ড দিন" class="w-full px-4 py-3 rounded-xl bg-slate-950 border border-slate-800 text-sm text-slate-100 focus:border-sky-400 focus:outline-none">
+                    <p id="modLoginError" class="hidden text-xs text-rose-400 mt-2 font-semibold">❌ ভুল ইউজারনেম বা পাসওয়ার্ড!</p>
+                </div>
+                <button type="submit" class="w-full py-3.5 rounded-xl bg-mod-gradient text-slate-950 font-extrabold text-sm shadow-lg">লগইন করুন</button>
+            </form>
+        </div>
+
+        <!-- DASHBOARD VIEW -->
+        <div id="modDashboardView" class="hidden space-y-6">
+            
+            <!-- Permission Banner -->
+            <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-3.5 flex flex-wrap items-center justify-between gap-2 text-xs">
+                <div class="flex items-center gap-2">
+                    <span class="text-slate-400">লগইন করা মডারেটর:</span>
+                    <strong id="loggedInModName" class="text-sky-400 font-english"></strong>
+                </div>
+                <div class="flex flex-wrap items-center gap-2 text-[11px]">
+                    <span id="permBadgeAdd" class="px-2.5 py-1 rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">ইউজার অ্যাড: চালু</span>
+                    <span id="permBadgeDel" class="px-2.5 py-1 rounded-lg bg-rose-500/10 text-rose-400 border border-rose-500/20">ইউজার ডিলিট: বন্ধ</span>
+                    <span id="permBadgeLogs" class="px-2.5 py-1 rounded-lg bg-slate-800 text-slate-400">লগ দেখা: বন্ধ</span>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
+                <!-- Add User Box -->
+                <div id="modAddUserCard" class="lg:col-span-2 bg-cardBg border border-slate-800 rounded-3xl p-6 space-y-5">
+                    <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                        <h3 class="text-sm font-bold text-sky-400"><i class="fa-solid fa-user-plus mr-1.5"></i> নতুন কাস্টমার ইউজার তৈরি করুন</h3>
+                        <span class="text-[11px] text-slate-400">আপনার তৈরি ইউজার: <strong id="myCreatedCount" class="text-white">0</strong> জন</span>
+                    </div>
+
+                    <form onsubmit="addUserByMod(event)" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-[11px] text-slate-400 mb-1">কাস্টমার ইউজারনেম</label>
+                            <input type="text" id="newClientUser" required placeholder="যেমন: user_rahim" class="w-full px-4 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-xs focus:border-sky-400 focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] text-slate-400 mb-1">কাস্টমার পাসওয়ার্ড</label>
+                            <input type="text" id="newClientPass" required placeholder="যেমন: pass999" class="w-full px-4 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-xs focus:border-sky-400 focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] text-slate-400 mb-1">মেয়াদ (দিন)</label>
+                            <select id="newClientValidity" class="w-full px-3 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-xs text-slate-100 focus:border-sky-400 focus:outline-none">
+                                <option value="0">আনলিমিটেড (Lifetime)</option>
+                                <option value="3">৩ দিন (Trial)</option>
+                                <option value="7">৭ দিন (১ সপ্তাহ)</option>
+                                <option value="15">১৫ দিন</option>
+                                <option value="30" selected>৩০ দিন (১ মাস)</option>
+                                <option value="90">৯০ দিন (৩ মাস)</option>
+                                <option value="365">৩৬৫ দিন (১ বছর)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-[11px] text-slate-400 mb-1">ডিভাইস লিমিট</label>
+                            <select id="newClientDeviceLimit" class="w-full px-3 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-xs text-slate-100 focus:border-sky-400 focus:outline-none">
+                                <option value="1" selected>১টি ডিভাইস (Locked)</option>
+                                <option value="2">২টি ডিভাইস</option>
+                                <option value="0">আনলিমিটেড ডিভাইস</option>
+                            </select>
+                        </div>
+                        <button type="submit" id="modAddSubmitBtn" class="sm:col-span-2 py-3.5 rounded-xl bg-mod-gradient text-slate-950 font-bold text-xs shadow hover:opacity-95 transition">
+                            <i class="fa-solid fa-plus mr-1"></i> ইউজার সেভ করুন
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Password Change Box -->
+                <div class="bg-cardBg border border-slate-800 rounded-3xl p-6 space-y-4">
+                    <h3 class="text-sm font-bold text-amber-400 border-b border-slate-800 pb-3"><i class="fa-solid fa-key mr-1.5"></i> প্যানেল পাসওয়ার্ড পরিবর্তন</h3>
+                    <form onsubmit="updateModPassword(event)" class="space-y-3">
+                        <div>
+                            <label class="block text-[11px] text-slate-400 mb-1">নতুন পাসওয়ার্ড</label>
+                            <input type="text" id="newModPasswordInput" required placeholder="নতুন পাসওয়ার্ড দিন" class="w-full px-3 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-xs focus:outline-none">
+                        </div>
+                        <button type="submit" class="w-full py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs transition">পাসওয়ার্ড আপডেট করুন</button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Live Activity Logs (Visible ONLY if Admin enables canViewLogs permission) -->
+            <div id="modLogsSection" class="hidden bg-cardBg border border-slate-800 rounded-3xl p-6 space-y-4">
+                <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                    <h3 class="text-sm font-bold text-amber-400"><i class="fa-solid fa-wave-square mr-1.5"></i> লাইভ ইউজার অ্যাক্টিভিটি লগ (অ্যাডমিন পারমিশনপ্রাপ্ত)</h3>
+                    <span class="text-[11px] text-slate-400">সর্বশেষ ৩০টি রেকর্ড</span>
+                </div>
+                <div id="modActivityFeed" class="max-h-72 overflow-y-auto space-y-2 pr-1"></div>
+            </div>
+
+            <!-- Users List Section -->
+            <div class="bg-cardBg border border-slate-800 rounded-3xl p-6 space-y-4">
+                <div class="flex flex-wrap items-center justify-between gap-3">
+                    <h3 class="text-sm font-bold text-slate-200">কাস্টমার অ্যাকাউন্ট তালিকা</h3>
+                    <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+                        <select id="modUserFilter" onchange="renderModUsers()" class="px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-xs text-slate-200 focus:outline-none">
+                            <option value="mine">শুধু আমার তৈরি ইউজার</option>
+                            <option value="all">সকল ইউজার</option>
+                        </select>
+                        <input type="text" id="modSearchInput" oninput="renderModUsers()" placeholder="ইউজার খুঁজুন..." class="px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-xs text-slate-200 focus:border-sky-400 focus:outline-none">
+                    </div>
+                </div>
+                <div id="modUsersList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5"></div>
+            </div>
+        </div>
+    </main>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getDatabase, ref, push, set, onValue, remove, update } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDMG7elkedXB4HS9H4CcGVIgMOGx0hG6m4",
+            authDomain: "k-120-fps-method.firebaseapp.com",
+            projectId: "k-120-fps-method",
+            storageBucket: "k-120-fps-method.firebasestorage.app",
+            messagingSenderId: "965540152826",
+            appId: "1:965540152826:web:ebf6c26119e8f52dae9043"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getDatabase(app);
+
+        let moderatorsData = [];
+        let usersData = [];
+        let allLogsData = [];
+        let currentMod = null;
+        let modPermissions = { canAdd: true, canDelete: false, canViewLogs: false };
+
+        signInAnonymously(auth).catch(err => console.error(err));
+
+        // Listen to Admin's Moderator Permissions
+        onValue(ref(db, 'app_settings/modPermissions'), (snap) => {
+            const perms = snap.val() || { canAdd: true, canDelete: false, canViewLogs: false };
+            modPermissions = {
+                canAdd: perms.canAdd !== false,
+                canDelete: perms.canDelete === true,
+                canViewLogs: perms.canViewLogs === true
+            };
+            applyPermissionsUI();
+            renderModUsers();
+        });
+
+        function applyPermissionsUI() {
+            const addBadge = document.getElementById('permBadgeAdd');
+            const delBadge = document.getElementById('permBadgeDel');
+            const logBadge = document.getElementById('permBadgeLogs');
+            const addBtn = document.getElementById('modAddSubmitBtn');
+            const logsSec = document.getElementById('modLogsSection');
+
+            if (modPermissions.canAdd) {
+                addBadge.innerText = "ইউজার অ্যাড: চালু";
+                addBadge.className = "px-2.5 py-1 rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/20";
+                if (addBtn) { addBtn.disabled = false; addBtn.classList.remove('opacity-50', 'cursor-not-allowed'); }
+            } else {
+                addBadge.innerText = "ইউজার অ্যাড: বন্ধ";
+                addBadge.className = "px-2.5 py-1 rounded-lg bg-rose-500/10 text-rose-400 border border-rose-500/20";
+                if (addBtn) { addBtn.disabled = true; addBtn.classList.add('opacity-50', 'cursor-not-allowed'); }
+            }
+
+            if (modPermissions.canDelete) {
+                delBadge.innerText = "ইউজার ডিলিট: চালু";
+                delBadge.className = "px-2.5 py-1 rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/20";
+            } else {
+                delBadge.innerText = "ইউজার ডিলিট: বন্ধ";
+                delBadge.className = "px-2.5 py-1 rounded-lg bg-rose-500/10 text-rose-400 border border-rose-500/20";
+            }
+
+            if (modPermissions.canViewLogs) {
+                logBadge.innerText = "লগ দেখা: চালু";
+                logBadge.className = "px-2.5 py-1 rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/20";
+                logsSec.classList.remove('hidden');
+            } else {
+                logBadge.innerText = "লগ দেখা: বন্ধ";
+                logBadge.className = "px-2.5 py-1 rounded-lg bg-slate-800 text-slate-400";
+                logsSec.classList.add('hidden');
+            }
+        }
+
+        onValue(ref(db, 'moderators'), (snap) => {
+            const data = snap.val();
+            moderatorsData = data ? Object.keys(data).map(k => ({ id: k, ...data[k] })) : [];
+            checkSession();
+        });
+
+        onValue(ref(db, 'app_users'), (snap) => {
+            const data = snap.val();
+            usersData = data ? Object.keys(data).map(k => ({ id: k, ...data[k] })) : [];
+            renderModUsers();
+        });
+
+        onValue(ref(db, 'analytics/activity_logs'), (snap) => {
+            const data = snap.val();
+            allLogsData = data ? Object.values(data).filter(l => l.type !== 'view').sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0)) : [];
+            renderModLogs();
+        });
+
+        function renderModLogs() {
+            const feed = document.getElementById('modActivityFeed');
+            if (!feed) return;
+            if (allLogsData.length === 0) {
+                feed.innerHTML = `<p class="text-xs text-slate-500 text-center py-4">কোনো লগ নেই।</p>`;
+                return;
+            }
+            feed.innerHTML = allLogsData.slice(0, 30).map(log => {
+                const badgeColor = log.type === 'login' ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30' : 'bg-amber-500/15 text-amber-400 border-amber-500/30';
+                return `
+                    <div class="flex flex-wrap items-center justify-between gap-2 p-2.5 rounded-xl bg-slate-950 border border-slate-800 text-xs">
+                        <div class="flex items-center gap-2">
+                            <span class="px-2 py-0.5 rounded border text-[10px] font-bold ${badgeColor}">${log.type.toUpperCase()}</span>
+                            <span class="font-bold text-white">${escapeHtml(log.username)}</span>
+                            <span class="text-slate-400">— ${escapeHtml(log.detail)}</span>
+                        </div>
+                        <span class="text-[11px] text-sky-400">${log.date} • ${log.time}</span>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function checkSession() {
+            const session = sessionStorage.getItem('maruf_mod_session');
+            if (session) {
+                const parsed = JSON.parse(session);
+                const valid = moderatorsData.find(m => m.username === parsed.username && m.password === parsed.password);
+                if (valid) {
+                    currentMod = valid;
+                    document.getElementById('modLoginView').classList.add('hidden');
+                    document.getElementById('modDashboardView').classList.remove('hidden');
+                    document.getElementById('modLogoutBtn').classList.remove('hidden');
+                    document.getElementById('loggedInModName').innerText = valid.name || valid.username;
+                    renderModUsers();
+                }
+            }
+        }
+
+        window.handleModLogin = function(e) {
+            e.preventDefault();
+            const u = document.getElementById('modUser').value.trim();
+            const p = document.getElementById('modPass').value.trim();
+            
+            let found = moderatorsData.find(m => m.username === u && m.password === p);
+            if (!found && u === 'moderator1' && p === 'mod123') {
+                found = { id: 'default', name: 'Main Moderator', username: 'moderator1', password: 'mod123' };
+            }
+
+            if (found) {
+                sessionStorage.setItem('maruf_mod_session', JSON.stringify(found));
+                checkSession();
+                showToast('সফল', 'মডারেটর প্যানেলে প্রবেশ করেছেন।');
+            } else {
+                document.getElementById('modLoginError').classList.remove('hidden');
+            }
+        };
+
+        window.logoutModerator = function() {
+            sessionStorage.removeItem('maruf_mod_session');
+            location.reload();
+        };
+
+        window.addUserByMod = async function(e) {
+            e.preventDefault();
+            if (!currentMod) return;
+            if (!modPermissions.canAdd) {
+                showToast('অনুমতি নেই!', 'অ্যাডমিন বর্তমানে নতুন ইউজার অ্যাড করা বন্ধ রেখেছেন।');
+                return;
+            }
+
+            const username = document.getElementById('newClientUser').value.trim();
+            const password = document.getElementById('newClientPass').value.trim();
+            const validityDays = parseInt(document.getElementById('newClientValidity').value, 10);
+            const deviceLimit = parseInt(document.getElementById('newClientDeviceLimit').value, 10);
+            const expiresAt = validityDays > 0 ? Date.now() + (validityDays * 24 * 60 * 60 * 1000) : 0;
+
+            await push(ref(db, 'app_users'), {
+                username,
+                password,
+                expiresAt,
+                deviceLimit,
+                boundDevices: [],
+                isBlocked: false,
+                addedByRole: 'moderator',
+                addedByName: currentMod.username,
+                addedByUsername: currentMod.username,
+                createdAt: Date.now()
+            });
+
+            document.getElementById('newClientUser').value = '';
+            document.getElementById('newClientPass').value = '';
+            showToast('সফল', `নতুন ইউজার "${username}" সেভ হয়েছে।`);
+        };
+
+        window.toggleModUserBlock = async function(id, currentStatus) {
+            const target = usersData.find(u => u.id === id);
+            if (!target || (target.addedByUsername !== currentMod.username && target.addedByName !== currentMod.username)) {
+                return showToast('অনুমতি নেই!', 'আপনি শুধু নিজের তৈরি ইউজার নিয়ন্ত্রণ করতে পারবেন।');
+            }
+            await update(ref(db, `app_users/${id}`), { isBlocked: !currentStatus });
+            showToast(currentStatus ? 'আনব্লক' : 'ব্লকড', currentStatus ? 'ইউজার চালু করা হয়েছে।' : 'ইউজার সাময়িকভাবে ব্লক করা হয়েছে।');
+        };
+
+        window.extendModUserValidity = async function(id, currentExpiresAt) {
+            const target = usersData.find(u => u.id === id);
+            if (!target || (target.addedByUsername !== currentMod.username && target.addedByName !== currentMod.username)) {
+                return showToast('অনুমতি নেই!', 'আপনি শুধু নিজের তৈরি ইউজারের মেয়াদ বাড়াতে পারবেন।');
+            }
+            const baseTime = (currentExpiresAt && currentExpiresAt > Date.now()) ? currentExpiresAt : Date.now();
+            const newExpiry = baseTime + (30 * 24 * 60 * 60 * 1000);
+            await update(ref(db, `app_users/${id}`), { expiresAt: newExpiry, isBlocked: false });
+            showToast('মেয়াদ বৃদ্ধি', 'ইউজারের মেয়াদ ৩০ দিন বাড়ানো হয়েছে।');
+        };
+
+        window.resetModUserDevice = async function(id) {
+            const target = usersData.find(u => u.id === id);
+            if (!target || (target.addedByUsername !== currentMod.username && target.addedByName !== currentMod.username)) {
+                return showToast('অনুমতি নেই!', 'আপনি শুধু নিজের তৈরি ইউজারের ডিভাইস রিসেট করতে পারবেন।');
+            }
+            await update(ref(db, `app_users/${id}`), { boundDevices: [] });
+            showToast('ডিভাইস রিসেট', 'ইউজারের ডিভাইস লক রিসেট করা হয়েছে।');
+        };
+
+        window.deleteUserByMod = async function(id) {
+            if (!modPermissions.canDelete) {
+                showToast('অনুমতি নেই!', 'অ্যাডমিন মডারেটরদের ইউজার ডিলিট করার পারমিশন বন্ধ রেখেছেন।');
+                return;
+            }
+            const target = usersData.find(u => u.id === id);
+            if (!target) return;
+
+            const isMine = target.addedByUsername === currentMod.username || target.addedByName === currentMod.username;
+            if (target.addedByRole === 'admin' || !isMine) {
+                showToast('অনুমতি নেই!', 'আপনি শুধুমাত্র নিজের তৈরি করা ইউজার ডিলিট করতে পারবেন।');
+                return;
+            }
+
+            if (confirm("আপনি কি নিশ্চিত এই ইউজার ডিলিট করতে চান?")) {
+                await remove(ref(db, `app_users/${id}`));
+                showToast('ডিলিট', 'ইউজার সফলভাবে মুছে ফেলা হয়েছে।');
+            }
+        };
+
+        window.copyCreds = function(u, p, expStr) {
+            const text = `MARUF 4K Optimizer Access:\nUsername: ${u}\nPassword: ${p}\nValidity: ${expStr}`;
+            navigator.clipboard.writeText(text).then(() => {
+                showToast('কপি হয়েছে!', `${u}-এর তথ্য কপি হয়েছে।`);
+            });
+        };
+
+        window.updateModPassword = async function(e) {
+            e.preventDefault();
+            if (!currentMod || currentMod.id === 'default') {
+                showToast('ত্রুটি', 'দয়া করে অ্যাডমিন প্যানেল থেকে মডারেটর অ্যাকাউন্ট তৈরি করে নিন।');
+                return;
+            }
+            const newPass = document.getElementById('newModPasswordInput').value.trim();
+            await set(ref(db, `moderators/${currentMod.id}/password`), newPass);
+            currentMod.password = newPass;
+            sessionStorage.setItem('maruf_mod_session', JSON.stringify(currentMod));
+            document.getElementById('newModPasswordInput').value = '';
+            showToast('সফল', 'মডারেটর পাসওয়ার্ড আপডেট হয়েছে।');
+        };
+
+        window.renderModUsers = function() {
+            const container = document.getElementById('modUsersList');
+            if (!container || !currentMod) return;
+
+            const myUsers = usersData.filter(u => u.addedByUsername === currentMod.username || u.addedByName === currentMod.username);
+            document.getElementById('myCreatedCount').innerText = myUsers.length;
+
+            const filterMode = document.getElementById('modUserFilter')?.value || 'mine';
+            const search = (document.getElementById('modSearchInput')?.value || '').toLowerCase();
+
+            const listToShow = (filterMode === 'mine' ? myUsers : usersData).filter(u => u.username.toLowerCase().includes(search));
+
+            if (listToShow.length === 0) {
+                container.innerHTML = `<p class="text-xs text-slate-500 col-span-full text-center py-4">কোনো ইউজার পাওয়া যায়নি।</p>`;
+                return;
+            }
+
+            const now = Date.now();
+            container.innerHTML = listToShow.map(u => {
+                const isMine = u.addedByUsername === currentMod.username || u.addedByName === currentMod.username;
+                const isExpired = u.expiresAt && u.expiresAt > 0 && now > u.expiresAt;
+                let expiryLabel = 'Lifetime';
+                let expiryColor = 'text-emerald-400';
+
+                if (u.expiresAt && u.expiresAt > 0) {
+                    const daysLeft = Math.ceil((u.expiresAt - now) / (1000 * 60 * 60 * 24));
+                    if (isExpired) {
+                        expiryLabel = 'মেয়াদ শেষ';
+                        expiryColor = 'text-rose-400 font-bold';
+                    } else {
+                        expiryLabel = `${daysLeft} দিন বাকি`;
+                        expiryColor = daysLeft <= 3 ? 'text-amber-400 font-bold' : 'text-sky-400';
+                    }
+                }
+
+                const badge = isMine 
+                    ? `<span class="text-[9px] text-sky-400 bg-sky-500/10 border border-sky-500/20 px-1.5 py-0.5 rounded font-bold">আপনার তৈরি</span>` 
+                    : `<span class="text-[9px] text-amber-400 bg-amber-500/10 border border-amber-500/20 px-1.5 py-0.5 rounded font-bold">অ্যাডমিন/অন্যান্য</span>`;
+
+                const deleteBtn = (isMine && modPermissions.canDelete)
+                    ? `<button onclick="deleteUserByMod('${u.id}')" title="ডিলিট করুন" class="text-rose-400 hover:text-rose-300 p-1.5"><i class="fa-solid fa-trash"></i></button>`
+                    : `<span class="text-slate-600 p-1.5 cursor-not-allowed" title="ডিলিট করার অনুমতি নেই"><i class="fa-solid fa-lock"></i></span>`;
+
+                const deviceCount = Array.isArray(u.boundDevices) ? u.boundDevices.length : 0;
+                const deviceLimitText = u.deviceLimit === 0 ? 'Unlimited' : `${deviceCount}/${u.deviceLimit || 1} Device`;
+
+                return `
+                <div class="p-4 rounded-2xl bg-slate-950 border ${u.isBlocked || isExpired ? 'border-rose-500/30' : 'border-slate-800'} flex flex-col justify-between gap-3">
+                    <div class="flex items-start justify-between">
+                        <div>
+                            <div class="flex items-center gap-1.5 flex-wrap">
+                                <p class="text-xs font-bold text-white font-english">${escapeHtml(u.username)}</p>
+                                ${badge}
+                                ${u.isBlocked ? '<span class="text-[9px] bg-rose-500/20 text-rose-400 px-1.5 py-0.5 rounded font-bold">BLOCKED</span>' : ''}
+                            </div>
+                            <p class="text-[11px] text-slate-400 font-mono-num mt-1">Pass: <span class="text-sky-400">${escapeHtml(u.password)}</span></p>
+                        </div>
+                        <div class="flex items-center gap-1">
+                            <button onclick="copyCreds('${escapeHtml(u.username)}', '${escapeHtml(u.password)}', '${expiryLabel}')" title="কপি" class="text-slate-400 hover:text-sky-400 p-1.5"><i class="fa-regular fa-copy"></i></button>
+                            ${deleteBtn}
+                        </div>
+                    </div>
+
+                    <div class="flex items-center justify-between text-[10px] text-slate-400 border-t border-slate-800/80 pt-2">
+                        <span><i class="fa-regular fa-clock mr-1"></i> <span class="${expiryColor}">${expiryLabel}</span></span>
+                        <span><i class="fa-solid fa-mobile-screen mr-1"></i> ${deviceLimitText}</span>
+                    </div>
+
+                    ${isMine ? `
+                    <div class="grid grid-cols-3 gap-1.5 pt-1">
+                        <button onclick="toggleModUserBlock('${u.id}', ${!!u.isBlocked})" class="py-1.5 px-2 rounded-lg text-[10px] font-bold border transition ${u.isBlocked ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400' : 'bg-rose-500/10 border-rose-500/30 text-rose-400'}">
+                            ${u.isBlocked ? 'আনব্লক' : 'ব্লক'}
+                        </button>
+                        <button onclick="extendModUserValidity('${u.id}', ${u.expiresAt || 0})" class="py-1.5 px-2 rounded-lg bg-sky-500/10 border border-sky-500/30 text-sky-400 text-[10px] font-bold">
+                            +৩০ দিন
+                        </button>
+                        <button onclick="resetModUserDevice('${u.id}')" class="py-1.5 px-2 rounded-lg bg-slate-800 text-slate-300 text-[10px] font-bold">
+                            ডিভাইস
+                        </button>
+                    </div>` : ''}
+                </div>
+                `;
+            }).join('');
+        };
+
+        window.showToast = function(title, message) {
+            const box = document.getElementById('toastBox');
+            document.getElementById('toastTitle').innerText = title;
+            document.getElementById('toastMessage').innerText = message;
+            box.classList.remove('translate-y-28', 'opacity-0', 'pointer-events-none');
+            setTimeout(() => box.classList.add('translate-y-28', 'opacity-0', 'pointer-events-none'), 3500);
+        };
+        function escapeHtml(str) { return str ? String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/'/g, '&#39;') : ''; }
+    </script>
+</body>
+</html>
